@@ -1,1 +1,1 @@
-Super basic clock in c
+Super basic clocks in c
