@@ -1,0 +1,249 @@
+#include <gtk/gtk.h>
+#include <string.h>
+#include <stdlib.h>
+
+guint threadID = 0;
+gchar timer[30] = "00:00:00:00\0"; 
+int seconds1 = 0;
+char seconds1str[1];
+int seconds2 = 0;
+char seconds2str[1]; //each var are use to modify the timer char.
+int minutes1 = 0;
+char minutes1str[1];
+int minutes2 = 0;
+char minutes2str[1];
+int hours1 = 0;
+char hours1str[1];
+int hours2 = 0;
+char hours2str[1];
+int fakehour = 0;
+int days1 = 0;
+char days1str[1]; 
+int days2 = 0;
+
+void updateLabel(GtkLabel *sum)
+{
+  
+  
+  
+  gtk_label_set_text (GTK_LABEL(sum), timer); //set label to "display"                
+  seconds1++;
+  
+    if(seconds1 == 10)
+    {
+      seconds1 = 0;
+      seconds2 += 1;
+      if(seconds2 == 6)
+      {
+          seconds1 = 0;
+          seconds2 = 0;
+          minutes1 += 1;
+      }
+    }
+    
+    if(minutes1 == 10)
+    {
+      minutes1 = 0;
+      minutes2 += 1;
+      if(minutes2 == 6)
+      {
+          minutes1 = 0;
+          minutes2 = 0;
+          hours1 += 1;
+          fakehour +=1;
+      }
+    }
+    
+    if(hours1 == 10)
+    {
+      hours1 = 0;
+      hours2 += 1;
+      if(fakehour == 24)
+      {
+        days1 += 1;
+        hours1 = 0;
+        hours2 = 0;
+      }
+    }
+  seconds1str[0] = seconds1 + '0';
+  seconds2str[0] = seconds2 + '0';
+  minutes1str[0] = minutes1 + '0';
+  minutes2str[0] = minutes2 + '0';    
+  hours1str[0] = hours1 + '0'; 
+  hours2str[0] = hours2 + '0'; 
+  days1str[0] = days1 + '0';    
+  timer[10] = seconds1str[0]; 
+  timer[9] =  seconds2str[0];
+  timer[7] = minutes1str[0];
+  timer[6] = minutes2str[0];
+  timer[4] = hours1str[0];
+  timer[3] = hours2str[0];
+  timer[1] = days1str[0];    
+}
+
+static void
+slow_speed (GtkWidget *widget,
+             gpointer   data)
+{
+  if(threadID != 0)
+  {
+    g_source_remove(threadID);
+    threadID = 0;
+  }
+  threadID = g_timeout_add(3000, updateLabel, data);
+  
+  
+}
+
+static void
+normal_speed (GtkWidget *widget,
+             gpointer   data)
+{
+  if(threadID != 0)
+  {
+    g_source_remove(threadID);
+    threadID = 0;
+  }
+  threadID = g_timeout_add(1000, updateLabel, data);
+  
+  
+}
+
+static void
+high_speed (GtkWidget *widget,
+             gpointer   data)
+{
+  if(threadID != 0)
+  {
+    g_source_remove(threadID);
+    threadID = 0;
+  }
+  threadID = g_timeout_add(25, updateLabel, data);
+  
+  
+}
+
+static void
+reset(GtkLabel *sum)
+{
+  seconds1 = 0;
+  seconds2 = 0;
+  minutes1 = 0;
+  minutes2 = 0;
+  hours1 = 0;
+  hours2 = 0;
+  fakehour = 0;
+  days1 = 0;
+  days2 = 0;
+  gtk_label_set_text (GTK_LABEL(sum), "00:00:00:00");
+}
+
+static void
+activate (GtkApplication *app,
+          gpointer        user_data)
+{
+  GtkWidget *window;
+  GtkWidget *grid;
+  GtkWidget *button;
+  GtkWidget *lab;
+
+  /* create a new window, and set its title */
+  window = gtk_application_window_new (app);
+  gtk_window_set_title (GTK_WINDOW (window), "Window");
+
+  /* Here we construct the container that is going pack our buttons */
+  grid = gtk_grid_new ();
+  gtk_widget_set_hexpand (grid, true);
+  gtk_widget_set_vexpand (grid, true);
+  gtk_widget_set_halign (grid, GTK_ALIGN_BASELINE_FILL);
+  gtk_widget_set_valign (grid, GTK_ALIGN_BASELINE_FILL);
+
+  /* Pack the container in the window */
+  gtk_window_set_child (GTK_WINDOW (window), grid);
+
+  
+  lab = gtk_label_new ("Hello.");
+  
+  PangoAttrList *const Attrs = pango_attr_list_new();
+  PangoAttribute *const SizeAttr = pango_attr_size_new(100*PANGO_SCALE);
+  pango_attr_list_insert(Attrs, SizeAttr);
+  gtk_label_set_attributes((GtkLabel *)lab, Attrs);
+
+  button = gtk_button_new_with_label ("Slow");
+  gtk_widget_set_hexpand (button, TRUE);
+  gtk_widget_set_vexpand (button, true);
+  gtk_widget_set_halign (button, GTK_ALIGN_BASELINE_FILL);
+  gtk_widget_set_valign (button, GTK_ALIGN_BASELINE_FILL);
+  g_signal_connect (button, "clicked", G_CALLBACK (slow_speed), lab);
+
+  /* Place the first button in the grid cell (0, 0), and make it fill
+   * just 1 cell horizontally and vertically (ie no spanning)
+   */
+  gtk_grid_attach (GTK_GRID (grid), button, 0, 0, 1, 1);
+
+  button = gtk_button_new_with_label ("Normal");
+  gtk_widget_set_hexpand (button, TRUE);
+  gtk_widget_set_vexpand (button, true);
+  gtk_widget_set_halign (button, GTK_ALIGN_BASELINE_FILL);
+  gtk_widget_set_valign (button, GTK_ALIGN_BASELINE_FILL);
+  g_signal_connect (button, "clicked", G_CALLBACK (normal_speed), lab);
+  /* Place the second button in the grid cell (1, 0), and make it fill
+   * just 1 cell horizontally and vertically (ie no spanning)
+   */
+  gtk_grid_attach (GTK_GRID (grid), button, 1, 0, 1, 1);
+
+  button = gtk_button_new_with_label ("Fast");
+  gtk_widget_set_hexpand (button, TRUE);
+  gtk_widget_set_vexpand (button, true);
+  gtk_widget_set_halign (button, GTK_ALIGN_BASELINE_FILL);
+  gtk_widget_set_valign (button, GTK_ALIGN_BASELINE_FILL);
+  g_signal_connect (button, "clicked", G_CALLBACK (high_speed), lab);
+  gtk_grid_attach (GTK_GRID (grid), button, 2, 0, 1, 1);
+
+  
+  // for the label
+  gtk_grid_attach (GTK_GRID (grid), lab, 0, 1, 3, 1);
+  gtk_widget_set_vexpand (lab, true);
+  gtk_widget_set_hexpand (lab, TRUE);
+  gtk_widget_set_halign (lab, GTK_ALIGN_BASELINE_FILL);
+  gtk_widget_set_valign (lab, GTK_ALIGN_BASELINE_FILL);
+
+  button = gtk_button_new_with_label ("Reset");
+  gtk_widget_set_vexpand (button, true);
+  gtk_widget_set_hexpand (button, TRUE);
+  gtk_widget_set_halign (button, GTK_ALIGN_BASELINE_FILL);
+  gtk_widget_set_valign (button, GTK_ALIGN_BASELINE_FILL);
+  g_signal_connect_swapped (button, "clicked", G_CALLBACK (reset), lab);
+
+  gtk_grid_attach (GTK_GRID (grid), button, 0, 2, 3, 1);
+
+  button = gtk_button_new_with_label ("Quit");
+  gtk_widget_set_vexpand (button, true);
+  gtk_widget_set_hexpand (button, TRUE);
+  gtk_widget_set_halign (button, GTK_ALIGN_BASELINE_FILL);
+  gtk_widget_set_valign (button, GTK_ALIGN_BASELINE_FILL);
+  g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_window_destroy), window);
+
+  gtk_grid_attach (GTK_GRID (grid), button, 0, 3, 3, 1);
+
+  
+  
+
+
+  gtk_window_present (GTK_WINDOW (window));
+}
+
+int
+main (int    argc,
+      char **argv)
+{
+  GtkApplication *app;
+  int status;
+
+  app = gtk_application_new ("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);
+  g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+  status = g_application_run (G_APPLICATION (app), argc, argv);
+  g_object_unref (app);
+
+  return status;
+}
